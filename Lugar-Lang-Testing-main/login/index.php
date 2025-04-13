@@ -1,5 +1,40 @@
 <?php 
-    require("login.php");
+    session_start();
+    $db_server = "localhost";
+    $db_user = "root";
+    $db_pass = "";
+    $db_name = "lugarlangdb";
+    $conn = mysqli_connect($db_server, $db_user, $db_pass, $db_name);
+
+    if(!$conn){
+        echo "<script>alert('Database connection failed. Please try again later.');</script>";
+        exit;
+    }
+
+    if(isset($_POST["login"])){
+        $email = $_POST["email"];
+        $pass = $_POST["password"];
+
+        $stmt = mysqli_prepare($conn, "SELECT id, password FROM registration WHERE email = ?");
+        mysqli_stmt_bind_param($stmt, "s", $email);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        $user = mysqli_fetch_array($result, MYSQLI_ASSOC);
+
+        if($user){
+            if(password_verify($pass, $user["password"])){
+                $_SESSION["user_id"] = $user["id"];
+                header("Location: /Lugar-Lang-Testing-main/account-setup/");
+                exit();
+            }
+            else{
+                echo "<script>alert('Wrong Email or Password');</script>";
+            }
+        }
+        else{
+            echo "<script>alert('Wrong Email or Password');</script>";
+        }
+    }
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -14,7 +49,7 @@
         <h2>Log In to Your Account</h2>
         <p>Enter your credentials to access Lugar Lang!</p>
         
-        <form id="loginForm" method="POST" action="login.php" enctype="multipart/form-data">
+        <form id="loginForm" method="POST" action="index.php" enctype="multipart/form-data">
             <div class="form-item">
                 <label for="email">Email</label>
                 <input type="email" id="email" name="email" placeholder="john@example.com">
